@@ -185,8 +185,8 @@ def main():
                         help="Path to query image to detect similar objects")
     parser.add_argument("--text", type=str, required=True,
                         help="Text description of the object (e.g., 'cat')")
-    parser.add_argument("--output", type=str, default=None,
-                        help="Output image path (default: assets/infer_results/<img_name>)")
+    parser.add_argument("--output", type=str, default="output/infer_results",
+                        help="Output image path for visualization")
     parser.add_argument("--config", type=str,
                         default="configs/pretrain/glip_Swin_L.yaml",
                         help="Model config yaml")
@@ -302,12 +302,9 @@ def main():
     print(f"Total predictions: {n_total}, above threshold {args.threshold}: {n_above}")
 
     # --- Visualize ---
-    output_path = args.output
-    if output_path is None:
-        os.makedirs(os.path.join(PROJECT_ROOT, "assets", "infer_results"), exist_ok=True)
-        img_basename = os.path.splitext(os.path.basename(args.img))[0]
-        output_path = os.path.join(PROJECT_ROOT, "assets", "infer_results",
-                                   f"{img_basename}_result.jpg")
+    os.makedirs(args.output, exist_ok=True)
+    img_basename = os.path.splitext(os.path.basename(args.img))[0]
+    output_path = os.path.join(args.output, f"{img_basename}_result.jpg")
 
     visualize_results(args.img, predictions, output_path,
                       score_threshold=args.threshold)
