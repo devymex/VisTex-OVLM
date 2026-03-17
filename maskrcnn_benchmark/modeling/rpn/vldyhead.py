@@ -19,12 +19,15 @@ from maskrcnn_benchmark.utils.fuse_helper import FeatureResizer, func_attention,
     BiAttentionBlock, AttentionT2I, BiAttentionBlockForCheckpoint, BertLMPredictionHead
 from transformers.models.bert.modeling_bert import BertConfig, BertAttention, BertIntermediate, BertOutput, \
     BertPreTrainedModel
-from transformers.modeling_utils import apply_chunking_to_forward
+try:
+    from transformers.modeling_utils import apply_chunking_to_forward
+except ImportError:
+    from transformers.pytorch_utils import apply_chunking_to_forward
 import torch.utils.checkpoint as checkpoint
 import pdb
 
 from maskrcnn_benchmark.modeling.language_backbone.clip_model import QuickGELU, LayerNorm, DropPath
-from timm.models.layers import DropPath, trunc_normal_
+from timm.layers import DropPath, trunc_normal_
 def cos_similarity(tensorx):
     sim_=torch.matmul(tensorx,tensorx.transpose(-1,-2)).cpu().numpy()
     sim_range01=sim_.copy()
@@ -223,8 +226,8 @@ class DyConv(torch.nn.Module):
             if level > 0:
                 temp_fea.append(self.DyConv[2](visual_feats[level - 1], **conv_args))
             if level < len(visual_feats) - 1:
-                temp_fea.append(F.upsample_bilinear(self.DyConv[0](visual_feats[level + 1], **conv_args),
-                                                    size=[feature.size(2), feature.size(3)]))
+                temp_fea.append(F.interpolate(self.DyConv[0](visual_feats[level + 1], **conv_args),
+                                                    size=[feature.size(2), feature.size(3)], mode='bilinear', align_corners=True))
             mean_fea = torch.mean(torch.stack(temp_fea), dim=0, keepdim=False)
 
             if self.AttnConv is not None:
@@ -263,6 +266,15 @@ class BertEncoderLayer(BertPreTrainedModel):
         self.intermediate = BertIntermediate(config)
         self.output = BertOutput(config)
 
+    @property
+    def dtype(self):
+        # Override to return a proper torch.dtype for get_extended_attention_mask
+        try:
+            p = next(self.parameters())
+            return p.dtype
+        except StopIteration:
+            return torch.float32
+
     def forward(self, inputs):
         language_dict_features = inputs["lang"]
         hidden_states = language_dict_features["hidden"]
@@ -272,7 +284,7 @@ class BertEncoderLayer(BertPreTrainedModel):
         input_shape = hidden_states.size()[:-1]
         # We can provide a self-attention mask of dimensions [batch_size, from_seq_length, to_seq_length]
         # ourselves in which case we just need to make it broadcastable to all heads.
-        extended_attention_mask = self.get_extended_attention_mask(attention_mask, input_shape, device)
+        extended_attention_mask = self.get_extended_attention_mask(attention_mask, input_shape)
 
         self_attention_outputs = self.attention(
             hidden_states,
@@ -499,7 +511,8 @@ class VLFuse(torch.nn.Module):
                     visual_features[4],
                     language_feature, language_feature,
                     mask,
-                    self.dummy_tensor
+                    self.dummy_tensor,
+                    use_reentrant=False
                 )
             else:
                 q0, q1, q2, q3, q4 = self.t2i_attn(
@@ -521,7 +534,8 @@ class VLFuse(torch.nn.Module):
                     visual_features[4],
                     language_dict_features['hidden'],
                     language_dict_features['masks'],
-                    self.dummy_tensor
+                    self.dummy_tensor,
+                    use_reentrant=False
                 )
             else:
                 q0, q1, q2, q3, q4, l0, l1, l2, l3, l4 = self.b_attn(
@@ -761,7 +775,7 @@ class VLDyHead(torch.nn.Module):
                     if isinstance(l, nn.Conv2d):
                         torch.nn.init.normal_(l.weight, std=0.01)
                         torch.nn.init.constant_(l.bias, bias_value)
-        
+
         if self.cfg.MODEL.DYHEAD.FUSE_CONFIG.MLM_LOSS:
             if cfg.MODEL.LANGUAGE_BACKBONE.MODEL_TYPE == "clip":
                 lang_cfg = BertConfig.from_pretrained("bert-base-uncased")
@@ -792,10 +806,10 @@ class VLDyHead(torch.nn.Module):
         t_logits = None
         if self.cfg.MODEL.DYHEAD.FUSE_CONFIG.USE_TOKEN_LOSS:
             t_logits = []
-        
+
         if self.cfg.MODEL.DYHEAD.FUSE_CONFIG.USE_FUSED_FEATURES_DOT_PRODUCT:
             embedding = dyhead_tower["lang"]["hidden"]
-        
+
         # MLM loss
         if self.cfg.MODEL.DYHEAD.FUSE_CONFIG.MLM_LOSS:
             mlm_logits = self.mlm_head(embedding)
@@ -981,7 +995,7 @@ class VLDyHeadModule(torch.nn.Module):
             text_masks = language_dict_features["masks"]
         else:
             text_masks = None
-        
+
         if self.cfg.MODEL.DYHEAD.FUSE_CONFIG.ADD_LINEAR_LAYER:
             embedding = self.tunable_linear.weight[:embedding.size(1), :].unsqueeze(0) + embedding
             language_dict_features['embedded'] = embedding

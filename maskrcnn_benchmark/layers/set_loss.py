@@ -4,7 +4,7 @@ import torch.distributed as dist
 from torch import nn
 
 from scipy.optimize import linear_sum_assignment
-from torch.cuda.amp import custom_fwd, custom_bwd
+from maskrcnn_benchmark.utils.amp import custom_fwd, custom_bwd
 
 
 def box_area(boxes):
@@ -368,4 +368,3 @@ class SetCriterion(nn.Module):
                     losses.update(l_dict)
 
         return losses
-

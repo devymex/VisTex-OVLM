@@ -23,7 +23,7 @@ import torch.utils.checkpoint as checkpoint
 import pdb
 
 from maskrcnn_benchmark.modeling.language_backbone.clip_model import QuickGELU, LayerNorm, DropPath
-from timm.models.layers import DropPath, trunc_normal_
+from timm.layers import DropPath, trunc_normal_
 
 class h_sigmoid(nn.Module):
     def __init__(self, inplace=True, h_max=1):
@@ -718,7 +718,7 @@ class VLDyHead(torch.nn.Module):
                     if isinstance(l, nn.Conv2d):
                         torch.nn.init.normal_(l.weight, std=0.01)
                         torch.nn.init.constant_(l.bias, bias_value)
-        
+
         if self.cfg.MODEL.DYHEAD.FUSE_CONFIG.MLM_LOSS:
             if cfg.MODEL.LANGUAGE_BACKBONE.MODEL_TYPE == "clip":
                 lang_cfg = BertConfig.from_pretrained("bert-base-uncased")
@@ -742,10 +742,10 @@ class VLDyHead(torch.nn.Module):
         t_logits = None
         if self.cfg.MODEL.DYHEAD.FUSE_CONFIG.USE_TOKEN_LOSS:
             t_logits = []
-        
+
         if self.cfg.MODEL.DYHEAD.FUSE_CONFIG.USE_FUSED_FEATURES_DOT_PRODUCT:
             embedding = dyhead_tower["lang"]["hidden"]
-        
+
         # MLM loss
         if self.cfg.MODEL.DYHEAD.FUSE_CONFIG.MLM_LOSS:
             mlm_logits = self.mlm_head(embedding)
@@ -910,7 +910,7 @@ class VLDyHeadModule(torch.nn.Module):
             text_masks = language_dict_features["masks"]
         else:
             text_masks = None
-        
+
         if self.cfg.MODEL.DYHEAD.FUSE_CONFIG.ADD_LINEAR_LAYER:
             embedding = self.tunable_linear.weight[:embedding.size(1), :].unsqueeze(0) + embedding
             language_dict_features['embedded'] = embedding

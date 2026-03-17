@@ -4,12 +4,20 @@ import sys
 
 try:
     from torch.hub import _download_url_to_file
+except ImportError:
+    try:
+        from torch.hub import download_url_to_file as _download_url_to_file
+    except ImportError:
+        from torch.utils.model_zoo import _download_url_to_file
+try:
     from torch.hub import urlparse
+except ImportError:
+    from urllib.parse import urlparse
+try:
     from torch.hub import HASH_REGEX
 except ImportError:
-    from torch.utils.model_zoo import _download_url_to_file
-    from torch.utils.model_zoo import urlparse
-    from torch.utils.model_zoo import HASH_REGEX
+    import re
+    HASH_REGEX = re.compile(r'-([a-f0-9]*)\.')
 
 from maskrcnn_benchmark.utils.comm import is_main_process
 from maskrcnn_benchmark.utils.comm import synchronize

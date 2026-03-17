@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 import numpy as np
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from timm.layers import DropPath, to_2tuple, trunc_normal_
 
 class Mlp(nn.Module):
     """ Multilayer perceptron."""
@@ -480,7 +480,7 @@ class SwinTransformer(nn.Module):
         super(SwinTransformer, self).__init__()
 
         print("VISION BACKBONE USE GRADIENT CHECKPOINTING: ", use_checkpoint)
-        
+
         self.pretrain_img_size = pretrain_img_size
         self.num_layers = len(depths)
         self.embed_dim = embed_dim

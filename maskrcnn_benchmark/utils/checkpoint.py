@@ -112,7 +112,7 @@ class Checkpointer(object):
             f.write(last_filename)
 
     def _load_file(self, f):
-        return torch.load(f, map_location=torch.device("cpu"))
+        return torch.load(f, map_location=torch.device("cpu"), weights_only=False)
 
     def _load_model(self, checkpoint, keyword="model"):
         load_state_dict(self.model, checkpoint.pop(keyword))

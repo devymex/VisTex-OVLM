@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import pdb
 import math
 from maskrcnn_benchmark.modeling.utils import cat, concat_box_prediction_layers, permute_and_flatten
-from timm.models.layers import DropPath
+from timm.layers import DropPath
 
 from transformers.activations import ACT2FN
 class BertPredictionHeadTransform(nn.Module):
@@ -241,7 +241,7 @@ class BiMultiHeadAttention(nn.Module):
 
         if self.stable_softmax_2d:
             attn_weights = attn_weights - attn_weights.max()
-        
+
         if self.clamp_min_for_underflow:
             attn_weights = torch.clamp(attn_weights, min=-50000) # Do not increase -50000, data type half has quite limited range
         if self.clamp_max_for_overflow:
@@ -382,7 +382,7 @@ class BiAttentionBlockForCheckpoint(nn.Module):
             for ii, feat in enumerate([q0, q1, q2, q3, q4]):
                 bs, _, h, w = feat.shape
                 q = feat.flatten(2).transpose(1, 2)
-                
+
                 new_v, new_l = self.single_attention_call(q, l, attention_mask_l=attention_mask_l)
                 new_v = new_v.transpose(1, 2).contiguous().view(bs, -1, h, w)
                 lang_feat.append(new_l)
@@ -410,12 +410,12 @@ class BiAttentionBlockForCheckpoint(nn.Module):
                 new_v_per_level = new_v[:, :, start:start + h * w].view(bs, -1, h, w).contiguous()
                 visu_feat.append(new_v_per_level)
                 start += h * w
-            
+
             lang_feat = [new_l, None, None, None, None]
 
         return visu_feat[0], visu_feat[1], visu_feat[2], visu_feat[3], visu_feat[4], lang_feat[0], lang_feat[1], lang_feat[2], lang_feat[3], lang_feat[4]
 
-    
+
     def single_attention_call(self, v, l, attention_mask_l=None, dummy_tensor=None):
         v = self.layer_norm_v(v)
         l = self.layer_norm_l(l)
@@ -432,7 +432,7 @@ class MultiHeadAttention(nn.Module):
     Multi-head attention module for both image and text
     """
 
-    def __init__(self, q_dim, k_dim, embed_dim, num_heads, dropout=0.1, 
+    def __init__(self, q_dim, k_dim, embed_dim, num_heads, dropout=0.1,
         clamp_min_for_underflow = False, clamp_max_for_overflow = False):
         super(MultiHeadAttention, self).__init__()
 

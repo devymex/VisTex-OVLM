@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import pdb
 import math
 from maskrcnn_benchmark.modeling.utils import cat, concat_box_prediction_layers, permute_and_flatten
-from timm.models.layers import DropPath
+from timm.layers import DropPath
 
 from transformers.activations import ACT2FN
 
@@ -89,7 +89,7 @@ def _make_mlp(input_dim, output_dim, drop):
 
 def _make_coord(batch, height, width):
     # relative position encoding
-    xv, yv = torch.meshgrid([torch.arange(0, height), torch.arange(0, width)])
+    xv, yv = torch.meshgrid([torch.arange(0, height), torch.arange(0, width)], indexing='ij')
     xv_min = (xv.float() * 2 - width) / width
     yv_min = (yv.float() * 2 - height) / height
     xv_max = ((xv + 1).float() * 2 - width) / width

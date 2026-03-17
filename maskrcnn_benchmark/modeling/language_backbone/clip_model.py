@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import torch.utils.checkpoint as checkpoint
 from maskrcnn_benchmark.config import try_to_find
 
-from timm.models.layers import DropPath, trunc_normal_
+from timm.layers import DropPath, trunc_normal_
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +147,7 @@ class CLIPTransformer(nn.Module):
             for k, v in pretrained_dict.items():
                 need_init = (
                         k.split('.')[0] in pretrained_layers
-                        or pretrained_layers[0] is '*'
+                        or pretrained_layers[0] == '*'
                 )
                 if need_init:
                     if k.startswith('text.') and k[5:] in model_dict.keys():
@@ -180,7 +180,7 @@ class CLIPTransformer(nn.Module):
 
         for resblock in self.resblocks:
             if self.use_checkpoint:
-                x = checkpoint.checkpoint(resblock, x, key_padding_mask)
+                x = checkpoint.checkpoint(resblock, x, key_padding_mask, use_reentrant=False)
             else:
                 x = resblock(x, key_padding_mask)
 

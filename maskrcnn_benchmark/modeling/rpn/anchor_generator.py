@@ -83,7 +83,7 @@ class AnchorGenerator(nn.Module):
             shifts_y = torch.arange(
                 0, grid_height * stride, step=stride, dtype=torch.float32, device=device
             )
-            shift_y, shift_x = torch.meshgrid(shifts_y, shifts_x)
+            shift_y, shift_x = torch.meshgrid(shifts_y, shifts_x, indexing='ij')
             shift_x = shift_x.reshape(-1)
             shift_y = shift_y.reshape(-1)
             shifts = torch.stack((shift_x, shift_y, shift_x, shift_y), dim=1)
@@ -362,8 +362,8 @@ def generate_anchors(
     """
     return _generate_anchors(
         stride,
-        np.array(sizes, dtype=np.float) / stride,
-        np.array(aspect_ratios, dtype=np.float),
+        np.array(sizes, dtype=np.float64) / stride,
+        np.array(aspect_ratios, dtype=np.float64),
     )
 
 
@@ -371,7 +371,7 @@ def _generate_anchors(base_size, scales, aspect_ratios):
     """Generate anchor (reference) windows by enumerating aspect ratios X
     scales wrt a reference (0, 0, base_size - 1, base_size - 1) window.
     """
-    anchor = np.array([1, 1, base_size, base_size], dtype=np.float) - 1
+    anchor = np.array([1, 1, base_size, base_size], dtype=np.float64) - 1
     anchors = _ratio_enum(anchor, aspect_ratios)
     anchors = np.vstack(
         [_scale_enum(anchors[i, :], scales) for i in range(anchors.shape[0])]

@@ -7,7 +7,7 @@ search "prompt" for details.
 import torch
 import torch.nn as nn
 import torch.utils.checkpoint as checkpoint
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from timm.layers import DropPath, to_2tuple, trunc_normal_
 from torch.nn import Conv2d, Dropout
 import math
 from functools import reduce

@@ -62,7 +62,8 @@
 
 
 #include <ATen/ATen.h>
-#include <THC/THCAtomics.cuh>
+#include <ATen/cuda/CUDAContext.h>
+#include <ATen/cuda/Atomic.cuh>
 #include <stdio.h>
 #include <math.h>
 #include <float.h>

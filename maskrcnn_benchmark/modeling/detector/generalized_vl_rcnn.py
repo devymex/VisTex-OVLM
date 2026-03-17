@@ -549,7 +549,7 @@ class GeneralizedVLRCNN(nn.Module):
             language_dict_features = {}
             if captions is not None:
                 # print(captions[0])
-                tokenized = self.tokenizer.batch_encode_plus(captions,
+                tokenized = self.tokenizer(captions,
                                                              max_length=self.cfg.MODEL.LANGUAGE_BACKBONE.MAX_QUERY_LEN,
                                                              padding='max_length' if self.cfg.MODEL.LANGUAGE_BACKBONE.PAD_MAX else "longest",
                                                              return_special_tokens_mask=True,
@@ -827,7 +827,7 @@ class GeneralizedVLRCNN(nn.Module):
                                             out_reference_image_center = [   img_preprocess((None, [im800], [mask_center[:,:,cnum]]), blur=3, bg_fac=0.2,  whitelize=True).numpy()[0]]
                                             # plt.imshow(out_reference_image_center[0].transpose(1, 2, 0));plt.show();
                                             io.imsave("/home/data/jy/sucai/out_reference_image_center{}_{}.png".format(idx,cnum),  out_reference_image_center[0].transpose(1, 2, 0))
-    
+
                                         out_reference_image = [  img_preprocess((None, [im800], [mask_of_reference]), blur=3, bg_fac=bg_fac,whitelize=True).numpy()[0]]
                                         io.imsave(
                                             "/home/data/jy/sucai/out_reference_image_mask{}_{}.png".format(idx,
@@ -1382,7 +1382,7 @@ class GeneralizedVLRCNN(nn.Module):
             captions = _construct_captions_from_class_names(class_names)
             captions.append('')  # onobj at the end, onedet/modeling/rpn/loss.py:719
 
-        tokenized = self.tokenizer.batch_encode_plus(captions,
+        tokenized = self.tokenizer(captions,
                                                      max_length=self.cfg.MODEL.LANGUAGE_BACKBONE.MAX_QUERY_LEN,
                                                      padding="longest",
                                                      return_special_tokens_mask=True,
@@ -1432,4 +1432,3 @@ class GeneralizedVLRCNN(nn.Module):
         # anchors are matched to [noobj]
         lang_dict["masks"][:, -1] = 0
         return lang_dict, positive_map
-
