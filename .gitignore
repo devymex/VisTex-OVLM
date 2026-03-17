@@ -1,5 +1,6 @@
 .github/
 assets/
+output/
 *.pyc
 *.o
 *.so
