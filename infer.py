@@ -11,11 +11,9 @@ Output:
 """
 import os
 import sys
-import copy
 import argparse
 
 import cv2
-import numpy as np
 import torch
 from PIL import Image
 from torchvision.transforms import functional as TF
@@ -55,7 +53,7 @@ def load_and_preprocess_image(image_path, min_size=800, max_size=800):
         scale = max_size / max(orig_w, orig_h)
     new_w = int(round(orig_w * scale))
     new_h = int(round(orig_h * scale))
-    pil_img = pil_img.resize((new_w, new_h), Image.BILINEAR)
+    pil_img = pil_img.resize((new_w, new_h), Image.Resampling.BILINEAR)
 
     # To tensor [0,1]
     img_tensor = TF.to_tensor(pil_img)  # [3, H, W] RGB in [0, 1]
@@ -88,7 +86,7 @@ def preprocess_ref_patch(image_path, target_h=800, target_w=800):
         tensor: [1, 3, target_h, target_w] ready for backbone
     """
     pil_img = Image.open(image_path).convert("RGB")
-    pil_img = pil_img.resize((target_w, target_h), Image.BILINEAR)
+    pil_img = pil_img.resize((target_w, target_h), Image.Resampling.BILINEAR)
 
     img_tensor = TF.to_tensor(pil_img)  # [3, H, W] RGB [0, 1]
     img_tensor = img_tensor[[2, 1, 0]] * 255.0  # BGR [0, 255]
