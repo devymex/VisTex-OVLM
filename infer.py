@@ -13,9 +13,8 @@ import os
 import sys
 import argparse
 
-import cv2
 import torch
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from torchvision.transforms import functional as TF
 
 # Ensure project root is on the path
@@ -136,19 +135,22 @@ def build_caption_and_positive_map(label_name, tokenizer):
 
 def visualize_results(image_path, predictions, output_path, score_threshold=0.3):
     """Draw bounding boxes on the image and save."""
-    img = cv2.imread(image_path)
-    if img is None:
-        raise FileNotFoundError(f"Cannot read image: {image_path}")
-    orig_h, orig_w = img.shape[:2]
+    img = Image.open(image_path).convert("RGB")
+    orig_w, orig_h = img.size
 
     boxes = predictions.bbox.cpu().numpy()        # [N, 4] in resized image coords
     scores = predictions.get_field("scores").cpu().numpy()
-    labels = predictions.get_field("labels").cpu().numpy()
 
     # predictions are in model input space; scale back to original image space
     pred_w, pred_h = predictions.size  # (width, height) of the prediction space
     scale_x = orig_w / pred_w
     scale_y = orig_h / pred_h
+
+    draw = ImageDraw.Draw(img)
+    try:
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
+    except OSError:
+        font = ImageFont.load_default()
 
     count = 0
     for i in range(len(boxes)):
@@ -160,14 +162,12 @@ def visualize_results(image_path, predictions, output_path, score_threshold=0.3)
         x2 = int(x2 * scale_x)
         y2 = int(y2 * scale_y)
 
-        color = (0, 255, 0)
-        cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+        draw.rectangle([x1, y1, x2, y2], outline=(0, 255, 0), width=2)
         text = f"{scores[i]:.2f}"
-        cv2.putText(img, text, (x1, max(y1 - 5, 0)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+        draw.text((x1, max(y1 - 18, 0)), text, fill=(0, 255, 0), font=font)
         count += 1
 
-    cv2.imwrite(output_path, img)
+    img.save(output_path)
     print(f"Saved {count} detections (threshold={score_threshold}) to {output_path}")
 
 
