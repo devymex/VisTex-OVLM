@@ -189,7 +189,7 @@ def main():
                         default="configs/pretrain/glip_Swin_L.yaml",
                         help="Model config yaml")
     parser.add_argument("--weight", type=str,
-                        default="/gemini/data-1/model/vistex/model_best.pth",
+                        default="vistex/model_best.pth",
                         help="Path to model weights")
     parser.add_argument("--threshold", type=float, default=0.3,
                         help="Score threshold for visualization")

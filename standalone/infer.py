@@ -162,7 +162,7 @@ def main():
     parser.add_argument("--ref", required=True, help="Reference patch image")
     parser.add_argument("--img", required=True, help="Query image")
     parser.add_argument("--text", required=True, help="Object text description")
-    parser.add_argument("--weight", default="/gemini/data-1/model/vistex/model_best.pth")
+    parser.add_argument("--weight", default="vistex/model_best.pth")
     parser.add_argument("--output", default="output/standalone_results")
     parser.add_argument("--threshold", type=float, default=0.3)
     parser.add_argument("--device", default="cuda")
