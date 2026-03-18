@@ -1,5 +1,4 @@
 .github/
-assets/
 output/
 *.pyc
 *.o
